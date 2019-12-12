@@ -156,225 +156,205 @@ values('2019-09-24','2019-10-01','5000000.00',1,3,1),
 insert into hopdongchitiet(SoLuong,IDHopDong,IDDichVuDiKem)
 values (3,1,3),(4,6,3),(2,3,2),(5,4,4),(2,1,1),(2,2,1),(2,7,2),(1,10,3),(2,9,3),(3,5,1),(4,8,1);
 
-select* from nhanvien
-where (HoTen like 'H%' or HoTen like 'T%' or HoTen like 'K%') AND length(HoTen)<=15;
+﻿-- yêu cầu 2
+-- Hiển thị thông tin của tất cả nhân viên có trong hệ thống có tên 
+--bắt đầu là một trong các ký tự “H”, “T” hoặc “K” và có tối đa 15 ký tự.
 
-select* from khachhang
-where ( DiaChi = 'Đà Nẵng' or DiaChi = 'Quảng Trị') and
- (year(current_date()) - year(NgaySinh) >= 18 and (year(current_date()) - year(NgaySinh)) <= 50);
 
- select khachhang.HoTen,khachhang.IDLoaiKhach, count(khachhang.HoTen) as solandatphong
- from khachhang
- inner join hopdong on khachhang.IDKhachHang = hopdong.IDKhachHang
- where khachhang.IDLoaiKhach = 1
- group by khachhang.HoTen
- order by solandatphong ASC;
+select * from nhanvien where (ho_va_ten like 'h%' or ho_va_ten like 't%'
+ or ho_va_ten like 'k%')  and length(ho_va_ten)<15; 
 
- select khachhang.IDKhachHang, Hoten, TenLoaiKhach,hopdong.IDHopDong,TenDichVu,NgayLamHopDong,NgayKetThuc, sum(dichvu.chiphithue+hopdongchitiet.soluong*dichvudikem.gia) as tongtien
- from loaikhach
- inner join khachhang on loaikhach.IDLoaiKhach = khachhang.IDLoaiKhach
- left join hopdong on khachhang.IDKhachHang = hopdong.IDKhachHang
- left join dichvu on hopdong.IDDichVu = dichvu.IDDichVu
- left join loaidichvu on dichvu.IDLoaiDichVu = loaidichvu.IDLoaiDichVu
- left join hopdongchitiet on hopdong.IDHopDong = hopdongchitiet.IDHopDong
- left join dichvudikem on hopdongchitiet.IDDichVuDiKem = dichvudikem.IDDichVuDiKem
- group by khachhang.IDKhachHang
- order by khachhang.IDKhachHang;
+ -- yêu cầu 3 
+ 
+ -- Hiển thị thông tin của tất cả khách hàng có độ tuổi từ 18 đến 50 tuổi 
+ -- và có địa chỉ ở “Đà Nẵng” hoặc “Quảng Trị”.
+select * from khachhang where DiaChi in ("Quang Tri","Da Nang") and (curdate()-NgaySinh>(18*30*365) and curdate()-NgaySinh<(50*30*365));
 
- select dichvu.IDDichVu, TenDichVu, DienTich, ChiPhiThue, TenLoaiDichVu
- from loaidichvu
- inner join dichvu on loaidichvu.IDLoaiDichVu = dichvu.IDLoaiDichVu
- inner join hopdong on dichvu.IDDichVu = hopdong.IDDichVu
- where not exists(
- select hopdong.NgayLamHopDong from hopdong
- where (hopdong.NgayLamHopDong between '2019-01-01' and '2019-03-01') and dichvu.IDDichVu = hopdong.IDDichVu)
- group by dichvu.IDDichVu;
+-- yêu cầu 4
+-- Đếm xem tương ứng với mỗi khách hàng đã từng đặt phòng bao nhiêu lần.
+-- Kết quả hiển thị được sắp xếp tăng dần theo số lần đặt phòng của khách hàng. 
+-- Chỉ đếm những khách hàng nào có Tên loại khách hàng là “Diamond”
+select khachhang.ho_va_ten, count(hopdong.IDDichVu) as so_lan_dat_phong from khachhang inner join hopdong on khachhang.IDKhachHang=hopdong.IDKhachHang
+inner join loaikhach on khachhang.IDLoaiKhach=loaikhach.IDLoaiKhach where loaikhach.TenLoaiKhach="Diamond"
+group by hopdong.IDKhachHang order by so_lan_dat_phong;
 
- select dichvu.IDdichvu, TenDichVu, DienTich, SoNguoiToiDa, ChiPhiThue, TenLoaiDichVu
-  from loaidichvu
- inner join dichvu on loaidichvu.IDLoaiDichVu = dichvu.IDLoaiDichVu
- inner join hopdong on hopdong.IDDichVu = dichvu.IDDichVu
- where exists (
- select hopdong.NgayLamHopDong from hopdong
-where (year(hopdong.NgayLamHopDong) = '2018' and hopdong.IDDichVu = dichvu.IDDichVu)
- and not exists ( select hopdong.NgayLamHopDong from hopdong where year(hopdong.NgayLamHopDong) ='2019' and hopdong.IDDichVu = dichvu.IDDichVu )
- )
- group by TenDichVu;
+-- yêu cầu 5
+-- Hiển thị IDKhachHang, HoTen, TenLoaiKhach, IDHopDong, TenDichVu, NgayLamHopDong, 
+-- NgayKetThuc, TongTien (Với TongTien được tính theo công thức như sau: 
+-- ChiPhiThue + SoLuong*Gia, với SoLuong và Giá là từ bảng DichVuDiKem) 
+-- cho tất cả các Khách hàng đã từng đặt phỏng. 
+-- (Những Khách hàng nào chưa từng đặt phòng cũng phải hiển thị ra).
 
--- task8
--- c1
-select distinct HoTen from khachhang;
+select khachhang.IDKhachHang, khachhang.ho_va_ten, loaikhach.TenLoaiKhach, hopdong.IDHopDong, hopdong.NgayLamHopDong, hopdong.NgayketThuc, hopdong.TongTien,dichvu.TenDichVu
+from khachhang left join hopdong on khachhang.IDKhachHang=hopdong.IDKhachHang 
+left join loaikhach on khachhang.IDLoaiKhach=loaikhach.IDLoaiKhach
+left join dichvu on hopdong.IDDichVu=dichvu.IDDichVu;
 
- -- C2
+-- yêu cầu 6 
+-- Hiển thị IDDichVu, TenDichVu, DienTich, ChiPhiThue, TenLoaiDichVu 
+-- của tất cả các loại Dịch vụ chưa từng được Khách hàng thực hiện
+-- đặt từ quý 1 của năm 2019 (Quý 1 là tháng 1, 2, 3).
+select dichvu.IDDichVu, dichvu.TenDichVu, dichvu.DienTich, dichvu.ChiPhiThue,loaidichvu.tendichvu from dichvu 
+ inner join loaidichvu on dichvu.loaidichvu_id=loaidichvu.id 
+ where not exists(select hopdong.IDHopDong from hopdong where (hopdong.NgayLamHopDong between "2018-12-31" and "2019-03-31") AND hopdong.IDDichVu=dichvu.IDDichVu);
 
- select HoTen from khachhang
- group by HoTen;
+-- yêu cầu 7
+-- Hiển thị thông tin IDDichVu, TenDichVu, DienTich, SoNguoiToiDa, ChiPhiThue, 
+-- TenLoaiDichVu của tất cả các loại dịch vụ đã từng được Khách hàng đặt 
+-- phòng trong năm 2018 nhưng chưa từng được Khách hàng đặt phòng  trong năm 2019.
+select dichvu.IDDichVu, dichvu.TenDichVu, dichvu.DienTich, dichvu.SoNguoiToiDa,dichvu.ChiPhiThue,loaidichvu.tendichvu from dichvu
+inner join loaidichvu on dichvu.loaidichvu_id=loaidichvu.id 
+where exists(select hopdong.IDHopDong from hopdong where year(hopdong.NgayLamHopDong)='2018' and hopdong.IDDichVu=dichvu.IDDichVu) 
+and not exists(select hopdong.IDHopDong from hopdong where year(hopdong.NgayLamHopDong)='2019' and hopdong.IDDichVu=dichvu.IDDichVu);
 
--- c3
+-- yêu cầu 8
+-- Hiển thị thông tin HoTenKhachHang có trong hệ thống, với yêu cầu 
+-- HoThenKhachHang không trùng nhau.
+select khachhang.ho_va_ten from khachhang;
+select distinct khachhang.ho_va_ten from khachhang;
+select distinct khachhang.ho_va_ten from khachhang group by khachhang.ho_va_ten;
+select khachhang.ho_va_ten from khachhang union select khachhang.ho_va_ten from khachhang ;
 
-select HoTen from khachhang
-union
-select HoTen from khachhang;
+-- yêu cầu 9
+-- Thực hiện thống kê doanh thu theo tháng, 
+-- nghĩa là tương ứng với mỗi tháng trong năm 2019 thì sẽ có bao nhiêu khách hàng 
+-- thực hiện đặt phòng.
 
- -- task 9
+create temporary table temp(
+thang int ,
+doanhthu int(255)
+);
+SELECT temp.thang,temp.doanhthu, case 
+when  hopdong.NgayLamHopDong<"2019-02-01" and hopdong.NgayLamHopDong>="2019-01-01"  then (temp.doanhthu=temp.doanhthu+hopdong.TongTien,
+temp.thang=1)
+when  hopdong.NgayLamHopDong<"2019-03-01" and hopdong.NgayLamHopDong>="2019-02-01"  then temp.doanhthu=temp.doanhthu+hopdong.TongTien
+when  hopdong.NgayLamHopDong<"2019-04-01" and hopdong.NgayLamHopDong>="2019-03-01"  then temp.doanhthu=temp.doanhthu+hopdong.TongTien
+when  hopdong.NgayLamHopDong<"2019-05-01" and hopdong.NgayLamHopDong>="2019-04-01"  then temp.doanhthu=temp.doanhthu+hopdong.TongTien
+when  hopdong.NgayLamHopDong<"2019-06-01" and hopdong.NgayLamHopDong>="2019-05-01"  then temp.doanhthu=temp.doanhthu+hopdong.TongTien
 
- select meses.month , count(month(NgayLamHopDong)) as sokhachhangdangki
- FROM
-            (
-                      SELECT 1 AS MONTH
-                       UNION SELECT 2 AS MONTH
-                       UNION SELECT 3 AS MONTH
-                       UNION SELECT 4 AS MONTH
-                       UNION SELECT 5 AS MONTH
-                       UNION SELECT 6 AS MONTH
-                       UNION SELECT 7 AS MONTH
-                       UNION SELECT 8 AS MONTH
-                       UNION SELECT 9 AS MONTH
-                       UNION SELECT 10 AS MONTH
-                       UNION SELECT 11 AS MONTH
-                       UNION SELECT 12 AS MONTH
-            ) as meses
- left join hopdong on month(hopdong.NgayLamHopDong) = meses.month
-  left join khachhang on khachhang.IDKhachHang = hopdong.IDKhachHang
- where year(hopdong.NgayLamHopDong) = '2019' or year(hopdong.NgayLamHopDong) is null or month(hopdong.NgayLamHopDong) is null
- group by meses.month
- order by meses.month;
-  -- task 10
+end as doanhthu
+from dichvu left join hopdong on dichvu.IDDichVu= hopdong.IDDichVu
+inner join temp;
 
- select hopdong.IDHopDong, NgayLamHopDong, NgayKetThuc, TienDatCoc, count(IDhopdongchitiet) as SoLuongDichVuDiKem
- from dichvudikem
- inner join hopdongchitiet on hopdongchitiet.IDDichVuDiKem = dichvudikem.IDDichVuDiKem
- inner join hopdong on hopdong.IDHopDong = hopdongchitiet.IDHopDong
-group by hopdong.IDHopDong
-order by hopdong.IDHopDong;
- -- task 11
+-- yêu cầu 10
+-- Hiển thị thông tin tương ứng với từng Hợp đồng thì đã sử dụng bao nhiêu 
+-- Dịch vụ đi kèm. Kết quả hiển thị bao gồm IDHopDong, NgayLamHopDong, NgayKetthuc, 
+-- TienDatCoc, SoLuongDichVuDiKem (được tính dựa trên việc count các IDHopDongChiTiet)
+select hopdong.IDHopDong,hopdong.NgayLamHopDong, hopdong.NgayketThuc, hopdong.TienDatCoc,count(hopdongchitiet.IDDichVuDiKem) as SoLuongDichVuDiKem
+from hopdong inner join hopdongchitiet on hopdong.IDHopDong=hopdongchitiet.IDHopDong group by hopdong.IDHopDong;
 
- select dichvudikem.IDDichVuDiKem , tendichvudikem, khachhang.HoTen
- from loaikhach
- inner join khachhang on khachhang.IDLoaiKhach = loaikhach.IDLoaiKhach
- inner join hopdong on hopdong.IDKhachHang = khachhang.IDKhachHang
- inner join hopdongchitiet on hopdongchitiet.IDHopDong = hopdong.IDHopDong
- inner join dichvudikem on dichvudikem.IDDichVuDiKem = hopdongchitiet.IDDichVuDiKem
- where khachhang.IDLoaiKhach = 1 and (khachhang.DiaChi = 'Vinh' or khachhang.DiaChi = 'Quảng Ngãi');
+-- yêu cầu 11
+-- Hiển thị thông tin các Dịch vụ đi kèm đã được sử dụng bởi những Khách hàng có 
+-- TenLoaiKhachHang là “Diamond” và có địa chỉ là “Vinh” hoặc “Quảng Ngãi”.
+select distinct dichvudikem.TenDichVuDiKem,dichvudikem.Gia,dichvudikem.DonVi from hopdong 
+inner join hopdongchitiet on hopdong.IDHopDong=hopdongchitiet.IDHopDong
+inner join dichvudikem on hopdongchitiet.IDDichVuDiKem=dichvudikem.IDDichVuDiKem
+inner join khachhang on khachhang.IDKhachHang=hopdong.IDKhachHang 
+inner join loaikhach on khachhang.IDLoaiKhach=loaikhach.IDLoaiKhach
+where loaikhach.TenLoaiKhach="Diamond" and (khachhang.DiaChi="Vinh" or khachhang.DiaChi="Quang Ngai"); 
 
-  -- task 12
-  select * from hopdong;
-  select hopdong.IDHopDong, khachhang.Hoten, nhanvien.Hoten, khachhang.SDT, TenDichVu, TienDatCoc, count(IDhopdongchitiet) as SoLuongDichVuDiKem
-  from  khachhang
- inner join hopdong on khachhang.IDKhachHang = hopdong.IDKhachHang
- inner join nhanvien on nhanvien.IDNhanVien = hopdong.IdNhanVien
- inner join dichvu on hopdong.IDDichVu = dichvu.IDDichVu
- inner join loaidichvu on dichvu.IDLoaiDichVu = loaidichvu.IDLoaiDichVu
- inner join hopdongchitiet on hopdong.IDHopDong = hopdongchitiet.IDHopDong
- inner join dichvudikem on hopdongchitiet.IDDichVuDiKem = dichvudikem.IDDichVuDiKem
- where exists(
- select hopdong.ngaylamhopdong from hopdong where((ngaylamhopdong between '2019-10-01' and '2019-12-31') and hopdong.IDDichVu = dichvu.IDDichVu))
- and not exists( select hopdong.ngaylamhopdong from hopdong where(ngaylamhopdong between '2019-01-01' and '2019-06-30') and hopdong.IDDichVu = dichvu.IDDichVu)
- ;
 
-  -- task 13
- --  soluong.IDDichVuDiKem , tendichvudikem, max(soluong.soluongdichvudikem) as dichvuduocsudugnhieunhat
-   select *
-   from (
-   select DichVuDiKem.IDDichVuDiKem , tendichvudikem, hopdongchitiet.IDhopdongchitiet,count(hopdongchitiet.IDhopdongchitiet) as soluongdichvudikem
-   from hopdongchitiet
- inner join DichVuDiKem on DichVuDiKem.IDDichVuDiKem = hopdongchitiet.IDDichVuDiKem
-inner join hopdong on hopdong.IDhopdong= hopdongchitiet.IDhopdong
-inner join khachhang on khachhang.IDkhachhang = hopdong.IDkhachhang
-   group by tendichvudikem
-   ) as soluong
-  where soluong.soluongdichvudikem =  (select max(soluong.soluongdichvudikem) as dichvuduocsudugnhieunhat
-   from (
-   select DichVuDiKem.IDDichVuDiKem , tendichvudikem, hopdongchitiet.IDhopdongchitiet,count(hopdongchitiet.IDhopdongchitiet) as soluongdichvudikem
-   from hopdongchitiet
- inner join DichVuDiKem on DichVuDiKem.IDDichVuDiKem = hopdongchitiet.IDDichVuDiKem
-inner join hopdong on hopdong.IDhopdong= hopdongchitiet.IDhopdong
-inner join khachhang on khachhang.IDkhachhang = hopdong.IDkhachhang
-   group by tendichvudikem
-   ) as soluong);
+-- yêu cầu 12
+-- Hiển thị thông tin IDHopDong, TenNhanVien, TenKhachHang, SoDienThoaiKhachHang, 
+-- TenDichVu, SoLuongDichVuDikem (được tính dựa trên tổng Hợp đồng chi tiết), TienDatCoc của tất cả các dịch vụ đã từng được khách hàng đặt vào 3 tháng cuối năm 2019 nhưng chưa từng được khách hàng đặt vào 6 tháng đầu năm 2019.
 
-   -- task14
+select hopdong.IDHopDong, hopdong.TongTien,hopdong.TienDatCoc, nhanvien.ho_va_ten, khachhang.ho_va_ten,khachhang.SDT, dichvu.TenDichVu, 
+count(hopdongchitiet.IDDichVuDiKem)as so_lan_su_dung
+from hopdong inner join nhanvien on hopdong.IDNhanVien=nhanvien.IDNhanVien
+inner join khachhang on hopdong.IDKhachHang=khachhang.IDKhachHang
+inner join dichvu on hopdong.IDDichVu=dichvu.IDDichVu
+inner join hopdongchitiet on hopdong.IDHopDong=hopdongchitiet.IDHopDongChiTiet
+where not exists(select hopdong.IDHopDong where hopdong.NgayLamHopDong between "2019-01-01" and "2019-06-31")
+and exists(select hopdong.IDHopDong where hopdong.NgayLamHopDong between "2019-09-01" and "2019-12-31")
+group by hopdongchitiet.IDHopDong;
 
-   select hopdong.IDHopDong, TenLoaiDichVu, TenDichVuDiKem, count(IDhopdongchitiet) as SoLanSuDung
-    from hopdongchitiet
- inner join DichVuDiKem on DichVuDiKem.IDDichVuDiKem = hopdongchitiet.IDDichVuDiKem
-inner join hopdong on hopdong.IDhopdong= hopdongchitiet.IDhopdong
-inner join khachhang on khachhang.IDkhachhang = hopdong.IDkhachhang
-inner join dichvu on dichvu.IDdichvu = hopdong.IDdichvu
-inner join loaidichvu on loaidichvu.IDloaidichvu = dichvu.IDloaidichvu
-group by tendichvudikem
-having count(IDhopdongchitiet) = 1;
+-- yêu cầu 13
+-- Hiển thị thông tin các Dịch vụ đi kèm được sử dụng nhiều nhất bởi các Khách hàng 
+-- đã đặt phòng. (Lưu ý là có thể có nhiều dịch vụ có số lần sử dụng nhiều như nhau).
+ 
+CREATE TEMPORARY TABLE temp
+ select dichvudikem.TenDichVuDiKem as ten_dich_vu_di_kem,count(hopdongchitiet.IDDichVuDiKem) as so_lan_su_dung from hopdongchitiet
+ inner join dichvudikem on dichvudikem.IDDichVuDiKem=hopdongchitiet.IDDichVuDiKem
+group by dichvudikem.TenDichVuDiKem;
+select * from temp;
 
- -- task 15
+CREATE TEMPORARY TABLE temp1
+select max(temp.so_lan_su_dung) as result from temp;
 
- select nhanvien.IDNhanVien, HoTen, TrinhDo, TenBoPhan, SDT, DiaChi
- from trinhdo
- inner join nhanvien on nhanvien.IDtrinhdo = trinhdo.IDtrinhdo
- inner join bophan on bophan.IDbophan = nhanvien.IDbophan
- inner join vitri on vitri.IDvitri = nhanvien.IDvitri
- inner join hopdong on hopdong.IDnhanvien = nhanvien.IDnhanvien
- where year(ngaylamhopdong) between '2018' and '2019'
- group by nhanvien.Hoten
- having count(hopdong.IDhopdong)<=3
- order by nhanvien.IDnhanvien;
+select temp.ten_dich_vu_di_kem, temp.so_lan_su_dung from temp inner join temp1
+where temp.so_lan_su_dung=temp1.result;
+DROP TEMPORARY TABLE temp;
+DROP TEMPORARY TABLE temp1;
 
- -- task 16
-  select * from hopdong;
-  select * from nhanvien;
-  SET SQL_SAFE_UPDATES = 0;
-  delete nhanvien
- from nhanvien
-inner join hopdong on hopdong.IDnhanvien = nhanvien.IDnhanvien
- where year(ngaylamhopdong) not between '2017' and '2019';
- SET SQL_SAFE_UPDATES = 1;
+-- yêu cầu 14
+-- Hiển thị thông tin tất cả các Dịch vụ đi kèm chỉ mới được sử dụng một lần duy nhất. 
+-- Thông tin hiển thị bao gồm IDHopDong, TenLoaiDichVu, TenDichVuDiKem, SoLanSuDung.
+select hopdong.IDHopDong, loaidichvu.tendichvu,dichvudikem.TenDichVuDiKem, count(hopdongchitiet.IDDichVuDiKem) as so_lan_su_dung
+from hopdong inner join loaidichvu on loaidichvu.id=hopdong.IDDichVu 
+inner join hopdongchitiet on hopdongchitiet.IDHopDong=hopdong.IDHopDong 
+inner join dichvudikem on dichvudikem.IDDichVuDIKem=hopdongchitiet.IDDichVuDIKem
+group by(dichvudikem.TenDichVuDiKem) having so_lan_su_dung=1;
 
---  -- task 17
-  create temporary table soluong (
-  select sum(dichvu.chiphithue+hopdongchitiet.soluong*dichvudikem.gia) as tongtien
- from loaikhach
- inner join khachhang on loaikhach.IDLoaiKhach = khachhang.IDLoaiKhach
- inner join hopdong on khachhang.IDKhachHang = hopdong.IDKhachHang
- inner join dichvu on hopdong.IDDichVu = dichvu.IDDichVu
- inner join loaidichvu on dichvu.IDLoaiDichVu = loaidichvu.IDLoaiDichVu
- inner join hopdongchitiet on hopdong.IDHopDong = hopdongchitiet.IDHopDong
- inner join dichvudikem on hopdongchitiet.IDDichVuDiKem = dichvudikem.IDDichVuDiKem
- where year(ngaylamhopdong) = '2019'
- group by khachhang.Hoten
- having sum(dichvu.chiphithue+hopdongchitiet.soluong*dichvudikem.gia) > 10000000.00
-  );
-  select * from soluong;
-update khachhang set khachhang.IDloaikhach = 1
-where khachhang.IDloaikhach = 2 and exists ( select * from soluong);
- drop table soluong;
--- task 18
- SET SQL_SAFE_UPDATES = 0;
-delete khachhang
-from khachhang
-inner join hopdong on hopdong.IDkhachhang = khachhang.IDkhachhang
-where ngaylamhopdong < '2016-01-01' ;
-SET SQL_SAFE_UPDATES = 1;
+-- yêu cầu 15
+-- Hiển thi thông tin của tất cả nhân viên bao gồm IDNhanVien, HoTen, 
+-- TrinhDo, TenBoPhan, SoDienThoai, DiaChi mới chỉ lập được tối đa 3 hợp đồng từ năm 2018 đến 2019.
 
- -- task 19
 
- create temporary table solandatdvdk(
-  select count(IDhopdongchitiet) as SoLanSuDung
-    from hopdongchitiet
- inner join DichVuDiKem on DichVuDiKem.IDDichVuDiKem = hopdongchitiet.IDDichVuDiKem
-inner join hopdong on hopdong.IDhopdong= hopdongchitiet.IDhopdong
-inner join khachhang on khachhang.IDkhachhang = hopdong.IDkhachhang
-inner join dichvu on dichvu.IDdichvu = hopdong.IDdichvu
-inner join loaidichvu on loaidichvu.IDloaidichvu = dichvu.IDloaidichvu
-group by tendichvudikem
-having count(IDhopdongchitiet) >= 10
- );
-update dichvudikem set dichvudikem.gia = dichvudikem.gia*2
-where exists (select * from  solandatdvdk);
- drop table solandatdvdk;
+select nhanvien.IDNhanVien, nhanvien.ho_va_ten,nhanvien.SDT,nhanvien.DiaChi, trinhdo.TrinhDo,bophan.TenBoPhan, count(hopdong.IDNhanVien) as so_luong_hop_dong from nhanvien
+inner join trinhdo on nhanvien.IDTrinhDo=trinhdo.IDTrinhDo
+inner join bophan on nhanvien.IDBoPhan=bophan.IDBoPhan
+inner join hopdong on nhanvien.IDNhanVien=hopdong.IDNhanVien
+where hopdong.NgayLamHopDong between "2018-01-01" and "2019-12-31"
+group by nhanvien.ho_va_ten
+having so_luong_hop_dong<4;
 
--- task 20
+-- yêu cầu 16
+-- Xóa những Nhân viên chưa từng lập được hợp đồng nào từ năm 2017 đến năm 2019.
+delete from nhanvien where not exists (select nhanvien.IDNhanVien from hopdong  
+where hopdong.NgayLamHopDong between "2017-01-01"and "2019-12-31" and  hopdong.IDNhanVien=nhanvien.IDNhanVien
+);
 
- select nhanvien.IDnhanvien, nhanvien.Hoten, nhanvien.SDT, nhanvien.email, nhanvien.diachi,"nhan vien" as Fromtable
- from nhanvien
+-- yêu cầu 17
+-- Cập nhật thông tin những khách hàng có TenLoaiKhachHang từ  Platinium lên Diamond, 
+-- chỉ cập nhật những khách hàng đã từng đặt phòng với tổng Tiền thanh toán trong 
+-- năm 2019 là lớn hơn 10.000.000 VNĐ.
+
+update khachhang, (select hopdong.IDKhachHang as id,sum(hopdong.TongTien) as tong_tien from hopdong
+where  year(hopdong.NgayLamHopDong)=2019
+group by hopdong.IDKhachHang
+having tong_tien>10000000) as temp set khachhang.IDLoaiKhach = (select loaikhach.IDLoaiKhach from loaikhach where loaikhach.TenLoaiKhach="Diamond")
+ where khachhang.IDLoaiKhach= (select loaikhach.IDLoaiKhach from loaikhach where loaikhach.TenLoaiKhach="Platinium")
+ and temp.id= khachhang.IDKhachHang;
+ 
+ -- yêu cầu 18
+ -- Xóa những khách hàng có hợp đồng trước năm 2016 (chú ý ràngbuộc giữa các bảng).
+
+ delete khachhang,hopdong,hopdongchitiet from khachhang inner join hopdong on khachhang.IDKhachHang=hopdong.IDKhachHang
+ inner join hopdongchitiet on hopdong.IDHopDong=hopdongchitiet.IDHopDong 
+ where hopdongchitiet.IDHopDong is null or not exists(select hopdong.IDHopDong where hopdong.NgayLamHopDong>"2016-01-01" and hopdong.IDKhachHang=khachhang.IDKhachHang);
+
+-- yêu cầu 19
+-- Cập nhật giá cho các Dịch vụ đi kèm được sử dụng trên 10 lần trong năm 2019 
+-- lên gấp đôi.
+update dichvudikem inner join(select dichvudikem.TenDichVuDiKem as ten_dich_vu_di_kem
+from hopdongchitiet inner join dichvudikem on dichvudikem.IDDichVuDiKem=hopdongchitiet.IDDichVuDiKem 
+group by dichvudikem.IDDichVuDiKem having count(hopdongchitiet.IDDichVuDiKem)>3) as temp set dichvudikem.Gia=dichvudikem.Gia*2 where dichvudikem.TenDichVuDiKem = temp.ten_dich_vu_di_kem;
+SET SQL_SAFE_UPDATES = 0;
+
+-- yêu cầu 20
+-- Hiển thị thông tin của tất cả các Nhân viên và Khách hàng có trong hệ thống, 
+-- thông tin hiển thị bao gồm ID (IDNhanVien, IDKhachHang), HoTen, Email, SoDienThoai, 
+-- NgaySinh, DiaChi.
+
+select nhanvien.IDNhanVien as ID,nhanvien.ho_va_ten,nhanvien.Email,nhanvien.SDT,nhanvien.NgaySinh,nhanvien.DiaChi, "nhanvien" as FromTable 
+from nhanvien 
 union all
- select khachhang.IDkhachhang, khachhang.Hoten, khachhang.SDT, khachhang.email, khachhang.diachi,"khach hang" as Fromtable
- from khachhang ;
+select khachhang.IDKhachHang as ID,khachhang.ho_va_ten,khachhang.Email,khachhang.SDT,khachhang.NgaySinh,khachhang.DiaChi,"khach hang" as FromTable 
+from khachhang;
+
+
+
+
+
+
+
